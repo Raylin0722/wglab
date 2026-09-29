@@ -40,7 +40,8 @@ async def state(request):
             day = None
         return {'machines': {s: s in cs for s in machines.PLAYER},
                 'job': job.summary(since=job.summary()['total']) if job else None,
-                'day': day if day and day.get('mode') == 'day' else None}
+                'day': day if day and day.get('mode') == 'day' else None,
+                'init': dict(seed.INIT)}
     return web.json_response(await blocking(collect))
 
 

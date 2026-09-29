@@ -76,21 +76,51 @@ def day_job(job):
     job.log('完成')
 
 
-def loop():
-    """等 wg-portal 起來；wg0 不存在就初始化（227 被重建時也會重來一次）。
-    初始化之後自動跑一次「模擬一天」，學生一打開就有紀錄可以查。"""
-    import jobs
+# 初始化進度（網頁顯示「初始化中」畫面用）。control 剛啟動時還不知道要不要初始化，先當作進行中。
+INIT = {'active': True, 'step': 'boot', 'detail': ''}
+
+
+def init_job(job):
+    """初始化：只做讓環境「已經出過事」需要的最少動作，完整的一天等學生按「模擬一天」才跑。
+    （wg0 與 peer 建好時，wg-portal 的同步已經刪掉 /24，外漏的條件本來就成立）"""
     import machines
-    need_day = False
+    import scenario
+
+    def say(*a):
+        INIT['detail'] = ' '.join(str(x) for x in a)
+        job.log(*a)
+
+    INIT.update(step='ready', detail='')
+    machines.wait_ready(say, timeout=120)
+    INIT.update(step='evidence', detail='')
+    b = open(f'{CLIENT_CONF}/b.addr').read().strip()
+    say('client-b 掃描整段 WireGuard 網段（學校會記錄 UDP 137）…')
+    dx('home-b', 'ping', '-c2', '-W1', '10.31.1.101', timeout=10)      # 先讓 client-b 握手，掃描才不會掉前幾個
+    scenario.nsrun('home-b', 'scan', b, '10.31.22', '0.05')
+    say('WireGuard 使用者與實驗室電腦各列印幾張…')
+    for _ in range(2):
+        for svc, name, ip in scenario.printers_users():
+            scenario.nsrun(svc, 'print', name, ip, 'init')
+    time.sleep(5)                                                      # 等印表機回撥
+    say('完成，可以開始調查')
+
+
+def loop():
+    """等 wg-portal 起來；wg0 不存在就初始化（227 被重建時也會重來一次）。"""
+    import jobs
+    need_init = False
     while True:
         try:
             ids = [i['Identifier'] for i in api('GET', '/interface/all')]
             if 'wg0' not in ids:
+                INIT.update(active=True, step='seed', detail='')
                 seed()
-                need_day = True
-            if need_day and not jobs.busy() and machines.wait_ready(lambda *a: log(*a), timeout=120):
-                if jobs.start('day', '模擬一天（初始化後自動執行）', day_job):
-                    need_day = False
+                need_init = True
+            if need_init and not jobs.busy():
+                if jobs.start('init', '初始化', init_job):
+                    need_init = False
+            if not need_init and not (jobs.busy() and jobs.current().kind == 'init'):
+                INIT['active'] = False
         except Exception:
             pass
-        time.sleep(5)
+        time.sleep(2)

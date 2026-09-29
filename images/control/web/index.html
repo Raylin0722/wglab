@@ -8,6 +8,19 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<div id="initView" class="initview show">
+  <div class="initbox">
+    <h1>實驗室初始化中</h1>
+    <p class="muted">正在把實驗室準備成「學校來信當下」的狀態，大約 1 分鐘，完成後會自動進入操作頁面。</p>
+    <ol id="initSteps">
+      <li data-step="boot">等待機器開機、wg-portal 啟動</li>
+      <li data-step="seed">建立 WireGuard 介面與使用者</li>
+      <li data-step="ready">等待 WireGuard 使用者連線</li>
+      <li data-step="evidence">產生初始狀態（掃描、列印）</li>
+    </ol>
+    <p id="initDetail" class="initdetail"></p>
+  </div>
+</div>
 <header>
   <h1>實驗室網路事件調查</h1>
   <div class="hstatus" id="jobStatus">待命中</div>

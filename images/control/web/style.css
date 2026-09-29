@@ -68,3 +68,18 @@ aside { display: flex; flex-direction: column; min-height: 0; background: var(--
   main { grid-template-columns: 1fr; grid-template-rows: 60% 40%; }
   .terms { border-right: 0; border-bottom: 1px solid var(--line); }
 }
+
+/* 初始化中畫面 */
+.initview { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: var(--bg); }
+.initview.show { display: flex; }
+.initbox { width: min(560px, calc(100vw - 32px)); padding: 28px 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.initbox h1 { font-size: 22px; margin-bottom: 6px; }
+.initbox ol { list-style: none; margin: 18px 0 10px; padding: 0; }
+.initbox li { padding: 7px 0 7px 30px; position: relative; color: var(--muted); }
+.initbox li::before { content: '○'; position: absolute; left: 4px; }
+.initbox li.done { color: var(--text); }
+.initbox li.done::before { content: '✓'; color: var(--ok); }
+.initbox li.now { color: var(--accent); font-weight: 600; }
+.initbox li.now::before { content: '●'; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.initdetail { min-height: 1.6em; font-size: 13px; color: var(--muted); font-family: var(--mono, monospace); }

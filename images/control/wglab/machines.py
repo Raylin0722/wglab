@@ -118,5 +118,5 @@ def reset(job):
     while time.time() < deadline and not all(os.path.exists(f'{CLIENT_CONF}/{x}.conf') for x in 'abc'):
         time.sleep(3)
     wait_ready(job.log)
-    job.log('完成。接著會自動跑一次「模擬一天」。')
+    job.log('完成。接著產生初始狀態。')
     return {'ok': True}

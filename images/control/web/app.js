@@ -105,6 +105,13 @@ let shownJob = 0, shownLines = 0;
 async function poll() {
   let s;
   try { s = await (await fetch('/api/state')).json(); } catch (e) { $('#jobStatus').textContent = '連不上實驗室'; return; }
+  const init = s.init || {};
+  $('#initView').classList.toggle('show', !!init.active);
+  if (init.active) {
+    const order = $$('#initSteps li').map(li => li.dataset.step), at = order.indexOf(init.step);
+    $$('#initSteps li').forEach((li, i) => { li.classList.toggle('done', i < at); li.classList.toggle('now', i === at); });
+    $('#initDetail').textContent = init.detail || '';
+  }
   for (const [svc, up] of Object.entries(s.machines)) $(`.ttab[data-svc="${svc}"] .dot`).classList.toggle('up', up);
   const job = s.job, busy = job && job.state === 'running';
   $$('#btnDay, #btnCheck, #btnReset, .ttab .rst').forEach(b => b.disabled = busy);
@@ -112,10 +119,11 @@ async function poll() {
   st.classList.toggle('busy', !!busy);
   if (busy && job.kind === 'day' && s.day) st.textContent = `模擬一天：${s.day.elapsed} / ${s.day.duration} 秒`;
   else if (busy) st.textContent = `${job.title}進行中…（進度見「驗收」分頁）`;
+  else if (job && job.kind === 'init') st.textContent = '待命中';
   else if (job) st.textContent = `上一個工作：${job.title}（${job.state === 'done' ? '完成' : '失敗'}）`;
   else st.textContent = '待命中';
 
-  if (job && job.kind !== 'day') {
+  if (job && job.kind !== 'day' && job.kind !== 'init') {
     if (job.id !== shownJob) { shownJob = job.id; shownLines = 0; $('#jobLog').textContent = ''; $('#result').innerHTML = ''; }
     const j = await (await fetch(`/api/job?since=${shownLines}`)).json();
     if (j && j.lines.length) { $('#jobLog').textContent += j.lines.join('\n') + '\n'; shownLines = j.total; }
