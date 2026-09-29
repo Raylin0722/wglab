@@ -9,4 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY rootfs/ /
 RUN find /etc/systemd /root -type f -exec sed -i 's/\r$//' {} + \
  && systemctl enable systemd-networkd rsyslog
+# 時區：UTC+8（台灣）
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime && echo Asia/Taipei > /etc/timezone
+ENV TZ=Asia/Taipei
 CMD ["/sbin/init"]

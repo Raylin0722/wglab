@@ -18,4 +18,8 @@ RUN find /etc/systemd /etc/wg-portal /usr/local/sbin /usr/local/lib/wg227 /root 
  && sh /tmp/ulogd.sh && rm /tmp/ulogd.sh \
  && chmod +x /usr/local/sbin/* /usr/local/lib/wg227/* \
  && systemctl enable systemd-networkd rsyslog ulogd2 lab-mgmt wg-portal wgportal-after-networkd
+# 時區：UTC+8（台灣）
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime && echo Asia/Taipei > /etc/timezone
+ENV TZ=Asia/Taipei
 CMD ["/sbin/init"]

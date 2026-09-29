@@ -25,5 +25,9 @@ RUN sed -i 's/\r$//' /opt/wglab/*.py /usr/local/bin/lab /tmp/actor/*.py \
  && chmod +x /usr/local/bin/lab \
  && cd /opt/wglab && sha256sum *.py > .manifest \
  && cd /tmp/actor && sha256sum *.py > /opt/wglab/.manifest-actor && rm -rf /tmp/actor
+# 時區：UTC+8（台灣）
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime && echo Asia/Taipei > /etc/timezone
+ENV TZ=Asia/Taipei
 WORKDIR /opt/wglab
 CMD ["python3", "/opt/wglab/control.py"]

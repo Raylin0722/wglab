@@ -6,4 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 COPY actors.py nsact.py /opt/wglab/
 RUN sed -i 's/\r$//' /opt/wglab/*.py
+# 時區：UTC+8（台灣）
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime && echo Asia/Taipei > /etc/timezone
+ENV TZ=Asia/Taipei
 ENTRYPOINT ["python3", "/opt/wglab/actors.py"]
