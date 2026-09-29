@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""命令列版的操作（跟網頁共用同一套工作）：
+  docker compose exec control lab check [--detail]   驗收
+  docker compose exec control lab day                模擬一天
+"""
+import json
+import sys
+import time
+import urllib.request
+
+API = 'http://127.0.0.1:8080'
+
+
+def call(path, method='GET'):
+    req = urllib.request.Request(API + path, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read() or 'null')
+    except urllib.error.HTTPError as e:
+        return json.loads(e.read() or 'null')
+
+
+cmd = sys.argv[1] if len(sys.argv) > 1 else ''
+if cmd not in ('check', 'day'):
+    print(__doc__.strip())
+    sys.exit(1)
+path = '/api/check' + ('?detail=1' if '--detail' in sys.argv else '') if cmd == 'check' else '/api/day'
+r = call(path, 'POST')
+if not r or not r.get('ok'):
+    sys.exit((r or {}).get('error', '無法執行'))
+seen = 0
+while True:
+    j = call(f'/api/job?since={seen}')
+    for line in j['lines']:
+        print(line, flush=True)
+    seen = j['total']
+    if j['state'] != 'running':
+        break
+    time.sleep(2)

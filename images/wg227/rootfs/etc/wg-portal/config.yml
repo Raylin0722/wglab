@@ -1,0 +1,17 @@
+core:
+  admin_user: admin@lab.local
+  admin_password: WgLab-Admin-2026
+  admin_api_token: wglab-api-token-7f3c9a1e5b2d8046
+  import_existing: false
+
+web:
+  external_url: http://localhost:8888
+  listening_address: :8888
+  site_title: 實驗室 WireGuard
+
+database:
+  type: sqlite
+  dsn: /var/lib/wg-portal/sqlite.db
+
+advanced:
+  log_level: info

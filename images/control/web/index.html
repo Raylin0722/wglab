@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>實驗室網路事件調查</title>
+<link rel="stylesheet" href="/static/vendor/xterm.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>實驗室網路事件調查</h1>
+  <div class="hstatus" id="jobStatus">待命中</div>
+  <div class="hbtns">
+    <button id="btnDay">模擬一天</button>
+    <a class="btn ghost" href="http://localhost:8888" target="_blank" rel="noopener">wg-portal 管理介面 ↗</a>
+  </div>
+</header>
+
+<main>
+  <section class="terms">
+    <nav class="ttabs" id="ttabs">
+      <div class="ttab active" data-svc="wg227"><span class="dot"></span><button class="tname">227</button><button class="rst" title="重開 227">重開</button></div>
+      <div class="ttab" data-svc="router"><span class="dot"></span><button class="tname">router</button><button class="rst" title="重開 router">重開</button></div>
+      <div class="ttab" data-svc="routerlog"><span class="dot"></span><button class="tname">routerlog</button><button class="rst" title="重開 routerlog">重開</button></div>
+    </nav>
+    <div class="tbody" id="tbody"></div>
+  </section>
+
+  <aside>
+    <nav class="stabs" id="stabs">
+      <button class="active" data-pane="letter">學校的信</button>
+      <button data-pane="guide">環境說明</button>
+      <button data-pane="report">報告範本</button>
+      <button data-pane="school">學校異常查詢</button>
+      <button data-pane="check">驗收</button>
+    </nav>
+    <div class="pane doc active" data-pane="letter" id="doc-letter"></div>
+    <div class="pane doc" data-pane="guide" id="doc-guide"></div>
+    <div class="pane doc" data-pane="report" id="doc-report"></div>
+    <div class="pane" data-pane="school">
+      <h2>校園網路異常查詢</h2>
+      <p class="muted" id="schoolTime"></p>
+      <table class="school"><thead><tr><th>偵測時間</th><th>IP</th><th>類型</th><th>原因</th><th>說明</th></tr></thead>
+        <tbody id="schoolRows"></tbody></table>
+    </div>
+    <div class="pane" data-pane="check">
+      <h2>驗收</h2>
+      <p class="muted">按下後全自動進行（約 4–5 分鐘）：先驗一輪，只重開 227、router、routerlog，再驗一輪。兩輪都通過、而且重開前後設定沒變，才算通過。</p>
+      <div class="row">
+        <button id="btnCheck">開始驗收</button>
+        <button id="btnReset" class="danger ghost">從頭來過</button>
+      </div>
+      <ul class="result" id="result"></ul>
+      <pre class="joblog" id="jobLog"></pre>
+    </div>
+  </aside>
+</main>
+
+<script src="/static/vendor/xterm.js"></script>
+<script src="/static/vendor/addon-fit.js"></script>
+<script src="/static/vendor/marked.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

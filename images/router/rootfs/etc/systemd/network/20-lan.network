@@ -1,0 +1,8 @@
+[Match]
+Name=lan
+
+[Network]
+Address=10.31.1.254/24
+LinkLocalAddressing=no
+IPv6AcceptRA=no
+ConfigureWithoutCarrier=yes

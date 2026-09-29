@@ -1,0 +1,11 @@
+# 9/2 加的補救：networkd 重啟時，規則會被清掉；10 秒後重啟 wg-portal，讓它把規則加回來
+[Unit]
+Description=Restart wg-portal 10s after systemd-networkd restarts
+After=systemd-networkd.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'sleep 10; systemctl restart wg-portal.service'
+
+[Install]
+WantedBy=systemd-networkd.service

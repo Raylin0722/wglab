@@ -1,0 +1,13 @@
+[Unit]
+Description=Lab only: keep the Docker management interface (eth0) for the wg-portal web UI only
+DefaultDependencies=no
+Before=systemd-networkd.service network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/wg227/mgmt.sh
+
+[Install]
+WantedBy=multi-user.target

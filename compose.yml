@@ -1,0 +1,78 @@
+# 實驗室 WireGuard 外漏事件：調查練習
+#   docker compose up -d --build        啟動（第一次約 2–3 分鐘）
+#   http://localhost:8080               所有操作都在這個網頁：終端機、模擬一天、驗收、重開、從頭來過
+#
+# 實驗室裡的機器都沒有 Docker 網路（network_mode: none），網路線由 control 用 veth 接起來，
+# 拓撲見 topology.html。只有 227 的 wg-portal 網頁與控制台透過 mgmt 網路對外開 port。
+
+x-systemd: &systemd
+  privileged: true
+  cgroup: private
+  tmpfs: [/run, /run/lock]
+  stop_signal: SIGRTMIN+3
+  restart: unless-stopped
+
+x-actor: &actor
+  build: images/actor
+  image: wglab-actor
+  network_mode: none
+  restart: unless-stopped
+  stop_signal: SIGKILL
+
+services:
+  control:
+    build: { context: ., dockerfile: images/control/Dockerfile }
+    image: wglab-control
+    privileged: true
+    pid: host
+    ports: ["127.0.0.1:8080:8080"]   # 只開給本機：網頁可以操作所有機器
+    networks: [mgmt]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/project:ro               # 「從頭來過」用 compose 重建玩家機器
+      - state:/var/lib/wglab
+      - school:/school
+      - clients:/clients
+    restart: unless-stopped
+    stop_signal: SIGKILL
+
+  # ---------- 玩家會登入的機器 ----------
+  wg227:
+    <<: *systemd
+    build: images/wg227
+    image: wglab-wg227
+    hostname: wg227
+    ports: ["127.0.0.1:8888:8888"] # wg-portal 網頁
+    networks: [mgmt]
+
+  router:
+    <<: *systemd
+    build: images/router
+    image: wglab-router
+    hostname: router
+    network_mode: none
+
+  routerlog:
+    <<: *systemd
+    build: images/routerlog
+    image: wglab-routerlog
+    hostname: routerlog
+    network_mode: none
+
+  # ---------- 情境角色 ----------
+  school:   { <<: *actor, hostname: school,   command: [school],   volumes: ["school:/data"] }
+  internet: { <<: *actor, hostname: internet, command: [web] }
+  home-a:   { <<: *actor, hostname: home-a,   command: [listen, a], volumes: ["clients:/data"] }
+  home-b:   { <<: *actor, hostname: home-b,   command: [listen, b], volumes: ["clients:/data"] }
+  home-c:   { <<: *actor, hostname: home-c,   command: [listen, c], volumes: ["clients:/data"] }
+  pc1:      { <<: *actor, hostname: pc1,      command: [labweb],   volumes: ["clients:/data"] }
+  pc2:      { <<: *actor, hostname: pc2,      command: [listen, pc2], volumes: ["clients:/data"] }
+  printer:  { <<: *actor, hostname: printer,  command: [printer],  volumes: ["clients:/data"] }
+
+networks:
+  mgmt: {}
+
+volumes:
+  state: {}
+  school: {}
+  clients: {}

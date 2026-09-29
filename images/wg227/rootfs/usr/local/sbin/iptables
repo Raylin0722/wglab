@@ -1,0 +1,16 @@
+#!/bin/bash
+# 容器內的 iptables -j LOG 不會寫進 kernel log（只有主機的 network namespace 才會），
+# 所以這裡把 LOG 自動換成 NFLOG group 1，由 ulogd 寫進 syslog；其他參數原樣交給真正的 iptables。
+#   --log-prefix X → --nflog-prefix X；--log-level 等 LOG 專用參數會被忽略
+out=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -j|--jump)
+      if [ "${2:-}" = LOG ]; then out+=(-j NFLOG --nflog-group 1); shift 2; continue; fi ;;
+    --log-prefix) out+=(--nflog-prefix "$2"); shift 2; continue ;;
+    --log-level) shift 2; continue ;;
+    --log-tcp-sequence|--log-tcp-options|--log-ip-options|--log-uid|--log-macdecode) shift; continue ;;
+  esac
+  out+=("$1"); shift
+done
+exec /usr/sbin/iptables "${out[@]}"

@@ -1,0 +1,15 @@
+[Unit]
+Description=WireGuard Portal v2.2.3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=WG_PORTAL_CONFIG=/etc/wg-portal/config.yml
+WorkingDirectory=/var/lib/wg-portal
+StateDirectory=wg-portal
+ExecStart=/usr/local/bin/wg-portal
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

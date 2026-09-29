@@ -1,0 +1,8 @@
+# lan 的連接埠：227、routerlog、pc1、pc2
+[Match]
+Name=r-*
+
+[Network]
+Bridge=lan
+LinkLocalAddressing=no
+IPv6AcceptRA=no

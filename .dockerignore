@@ -1,0 +1,6 @@
+# control 的建置範圍是專案根目錄；只需要 images/、player/
+instructor/
+.git/
+*.tar.gz
+PLAN.md
+topology.html

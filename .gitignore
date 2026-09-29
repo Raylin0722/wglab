@@ -1,0 +1,8 @@
+# 講師資料（參考解答）：公開的 repo 不要放；私人 repo 可以刪掉這行
+instructor/
+
+# 打包產物
+wglab-player.tar.gz
+
+# 內部設計紀錄（含真實 IP 對照，不公開）
+PLAN.md

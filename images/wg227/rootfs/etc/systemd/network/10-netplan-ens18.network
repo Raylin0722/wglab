@@ -1,0 +1,9 @@
+[Match]
+Name=ens18
+
+[Network]
+Address=10.31.1.27/24
+Gateway=10.31.1.254
+LinkLocalAddressing=no
+IPv6AcceptRA=no
+ConfigureWithoutCarrier=yes

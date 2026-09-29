@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>練習環境拓撲</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d; --text: #e6edf3; --muted: #a3acbc;
+    --accent: #4cc2ff; --danger: #ff5d5d; --ok: #5ad17a; --warn: #f5b84a;
+    --font: "Noto Sans TC", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+  main { max-width: 1680px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 34px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 18px; }
+  svg { width: 100%; height: auto; display: block; }
+  .zone rect { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 8 6; }
+  .zone text { fill: var(--muted); font-size: 18px; }
+  .node rect { fill: var(--panel); stroke: var(--line); stroke-width: 2; }
+  .node.login rect { stroke: var(--accent); stroke-width: 3; }
+  .node.hidden rect { stroke-dasharray: 5 5; }
+  .node .t { fill: var(--text); font-size: 22px; font-weight: 700; }
+  .node .ip { fill: var(--accent); font-family: var(--mono); font-size: 16px; }
+  .node .d { fill: var(--muted); font-size: 15px; }
+  .node.hidden .t { fill: var(--muted); }
+  .link { stroke: var(--muted); stroke-width: 3; fill: none; }
+  .tunnel { stroke: var(--ok); stroke-width: 3; fill: none; stroke-dasharray: 10 7; }
+  .leak { stroke: var(--danger); stroke-width: 4; fill: none; }
+  .leak2 { stroke: var(--warn); stroke-width: 4; fill: none; }
+  .lbl { font-size: 15px; fill: var(--muted); }
+  .lbl.ok { fill: var(--ok); } .lbl.danger { fill: var(--danger); } .lbl.warn { fill: var(--warn); }
+  .bus { stroke: var(--muted); stroke-width: 6; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 18px; font-size: 17px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 10px; }
+  .sw { width: 34px; height: 0; border-top: 4px solid; display: inline-block; }
+  .box { width: 26px; height: 18px; border: 3px solid; border-radius: 4px; display: inline-block; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 24px; }
+  .notes div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; font-size: 16px; line-height: 1.6; color: var(--muted); }
+  .notes b { color: var(--text); display: block; margin-bottom: 4px; font-size: 18px; }
+  code { font-family: var(--mono); color: var(--accent); font-size: .92em; }
+  svg .zone text { font-size: 22px; } svg .node .t { font-size: 28px; }
+  svg .node .ip, svg text.ip { fill: var(--accent); font-family: var(--mono); font-size: 22px; }
+  svg .node .d { font-size: 21px; } svg .lbl { font-size: 20px; }
+  svg .badge text { font: 700 20px var(--mono); fill: var(--bg); text-anchor: middle; }
+  svg .badge.b1 circle { fill: var(--danger); } svg .badge.b2 circle { fill: var(--warn); }
+</style>
+</head>
+<body>
+<main>
+  <h1>練習環境拓撲</h1>
+  <p class="sub">docker compose：每台機器一個容器，網路線由 control 用 veth 接起來；沒有任何封包會離開這些容器。</p>
+
+  <svg class="topo" viewBox="0 0 1640 690" role="img" aria-label="練習環境網路拓撲">
+      <!-- 區域 -->
+      <g class="zone"><rect x="2" y="2" width="1636" height="208" rx="14"/><text x="22" y="32">外面（全部是假的）</text></g>
+      <g class="zone"><rect x="2" y="400" width="1636" height="286" rx="14"/><text x="96" y="426">實驗室內網</text></g>
+
+      <!-- 連線 -->
+      <path class="link" d="M270 196 V226 H1330 V196 M790 196 V226 M820 226 V262"/>
+      <text class="lbl" x="840" y="252">203.0.113.0/24</text>
+      <path class="link" d="M820 382 V470 M120 470 H1150 M300 470 V512 M740 470 V512 M1040 470 V512"/>
+      <path class="link" d="M1090 322 H1530 V470 M1250 470 H1620 M1430 470 V512"/>
+      <text class="lbl" x="120" y="461">成員網段 10.31.1.0/24</text>
+      <text class="lbl" x="832" y="458">10.31.1.254</text>
+      <text class="lbl" x="1250" y="458">服務網段 10.31.3.0/24</text>
+      <text class="lbl" x="1100" y="310">10.31.3.1</text>
+      <path class="tunnel" d="M70 196 V512"/>
+      <text class="lbl ok" x="88" y="296">WireGuard 隧道</text>
+      <text class="lbl ok" x="88" y="330">UDP 443 → router 轉送 → wg0</text>
+
+      <!-- 外面 -->
+      <g class="node hidden"><rect x="30" y="50" width="480" height="146" rx="12"/>
+        <text class="t" x="52" y="86">WireGuard 使用者（在家）</text>
+        <text class="ip" x="52" y="120">client-a 10.31.22.3</text>
+        <text class="ip" x="52" y="150">client-b 10.31.22.5</text>
+        <text class="ip" x="52" y="180">client-c 10.31.22.8</text>
+      </g>
+      <g class="node hidden"><rect x="580" y="50" width="420" height="146" rx="12"/>
+        <text class="t" x="602" y="86">假網際網路</text>
+        <text class="ip" x="602" y="120">198.51.100.10</text>
+        <text class="d" x="602" y="152">用來確認「能不能上網」</text>
+      </g>
+      <g class="node hidden"><rect x="1070" y="50" width="540" height="146" rx="12"/>
+        <text class="t" x="1092" y="86">學校網路</text>
+        <text class="ip" x="1092" y="120">203.0.113.1</text>
+        <text class="d" x="1092" y="150">記錄送往私有位址的封包（隱藏）</text>
+        <text class="d" x="1092" y="182">異常查詢網頁：只寫「疑似中毒」</text>
+      </g>
+      <g class="badge b1"><circle cx="1540" cy="80" r="18"/><text x="1540" y="87">1</text></g>
+      <g class="badge b2"><circle cx="1584" cy="80" r="18"/><text x="1584" y="87">2</text></g>
+      <g class="badge b1"><circle cx="470" cy="150" r="18"/><text x="470" y="157">1</text></g>
+
+      <!-- 出口 -->
+      <g class="node login"><rect x="550" y="262" width="540" height="120" rx="12"/>
+        <text class="t" x="572" y="298">router</text>
+        <text class="ip" x="572" y="332">WAN 203.0.113.6（NAT 出口）</text>
+        <text class="d" x="572" y="364">NAT · UDP 443 轉送到 227 · syslog 只存本機</text>
+      </g>
+      <g class="badge b1"><circle cx="1010" cy="292" r="18"/><text x="1010" y="299">1</text></g>
+      <g class="badge b2"><circle cx="1054" cy="292" r="18"/><text x="1054" y="299">2</text></g>
+
+      <!-- 內網 -->
+      <g class="node login"><rect x="30" y="512" width="540" height="150" rx="12"/>
+        <text class="t" x="100" y="548">227</text>
+        <text class="ip" x="100" y="582">ens18 10.31.1.27</text>
+        <text class="ip" x="100" y="612">wg0 10.31.22.1/24</text>
+        <text class="d" x="100" y="644">systemd-networkd · wg-portal v2.2.3</text>
+      </g>
+      <g class="badge b1"><circle cx="530" cy="544" r="18"/><text x="530" y="551">1</text></g>
+      <g class="node login"><rect x="620" y="512" width="240" height="150" rx="12"/>
+        <text class="t" x="642" y="548">routerlog</text>
+        <text class="ip" x="642" y="582">10.31.1.20</text>
+        <text class="d" x="642" y="616">log 主機</text>
+        <text class="d" x="642" y="648">（還沒設定）</text>
+      </g>
+      <g class="node hidden"><rect x="910" y="512" width="260" height="150" rx="12"/>
+        <text class="t" x="932" y="548">pc1、pc2</text>
+        <text class="ip" x="932" y="582">10.31.1.101–102</text>
+        <text class="d" x="932" y="616">上網、列印</text>
+        <text class="d" x="932" y="648">（不會外漏）</text>
+      </g>
+      <g class="node hidden"><rect x="1250" y="512" width="360" height="150" rx="12"/>
+        <text class="t" x="1272" y="548">印表機</text>
+        <text class="ip" x="1272" y="582">10.31.3.254</text>
+        <text class="d" x="1272" y="616">WSD：列印時回撥</text>
+        <text class="d" x="1272" y="648">client 的 :5357</text>
+      </g>
+      <g class="badge b2"><circle cx="1570" cy="544" r="18"/><text x="1570" y="551">2</text></g>
+    </svg>
+
+  <div class="legend">
+    <span><i class="box" style="border-color:var(--accent)"></i>玩家可以登入（227、router、routerlog）</span>
+    <span><i class="box" style="border-color:var(--line); border-style:dashed"></i>情境角色，玩家不能登入</span>
+    <span><i class="sw" style="border-color:var(--ok); border-top-style:dashed"></i>WireGuard 隧道</span>
+    <span><i class="sw" style="border-color:var(--danger)"></i>① client-b 掃描 137 → 227 → router → 學校</span>
+    <span><i class="sw" style="border-color:var(--warn)"></i>② 印表機回撥 10.31.22.x:5357 → router → 學校</span>
+  </div>
+
+  <div class="notes">
+    <div><b>「模擬一天」會發生什麼</b>正常上網與列印；有人新增 peer（/24 被同步刪掉）；「自動更新」讓 networkd 清掉規則 32700 → WireGuard 全部斷線 → 10 秒後補救服務救回；client-b 掃描 137；WireGuard 使用者大量列印。</div>
+    <div><b>玩家拿到的線索</b>學校的信（NAT 出口 203.0.113.6、UDP 137、對 10.31.22.x 的大量目的地）、異常查詢網頁，以及一句「好像還有其他遺漏待處理」。</div>
+    <div><b>驗收時要同時做到</b>學校收不到任何送往私有位址的封包；WireGuard 使用者照常連線、列印的回撥送得到；networkd 重新設定、容器重開後仍然成立；routerlog 查得到被擋下的紀錄。</div>
+  </div>
+</main>
+</body>
+</html>
