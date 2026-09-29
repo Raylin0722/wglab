@@ -12,9 +12,11 @@ x-systemd: &systemd
   stop_signal: SIGRTMIN+3
   restart: unless-stopped
 
+# 情境角色共用同一個 image：只由 school 負責 build（見下方），其他角色直接使用。
+# 如果每個角色都寫 build，新版 builder 會同時 build 並輸出同一個 tag 而出錯。
 x-actor: &actor
-  build: images/actor
   image: wglab-actor
+  pull_policy: never      # 本機 build 的 image，不要去 Docker Hub 拉
   network_mode: none
   restart: unless-stopped
   stop_signal: SIGKILL
@@ -60,7 +62,7 @@ services:
     network_mode: none
 
   # ---------- 情境角色 ----------
-  school:   { <<: *actor, hostname: school,   command: [school],   volumes: ["school:/data"] }
+  school:   { <<: *actor, build: images/actor, hostname: school, command: [school], volumes: ["school:/data"] }
   internet: { <<: *actor, hostname: internet, command: [web] }
   home-a:   { <<: *actor, hostname: home-a,   command: [listen, a], volumes: ["clients:/data"] }
   home-b:   { <<: *actor, hostname: home-b,   command: [listen, b], volumes: ["clients:/data"] }
