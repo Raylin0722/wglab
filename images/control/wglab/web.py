@@ -22,6 +22,7 @@ from common import containers, log
 WEB = '/opt/wglab/web'
 DOCS = {'letter': 'LETTER.md', 'guide': 'GUIDE.md', 'report': 'REPORT-TEMPLATE.md'}
 ALERTS = '/school/alerts.json'
+INCIDENT = '/var/lib/wglab/incident-date'
 
 
 def blocking(fn, *a):
@@ -85,7 +86,19 @@ async def doc(request):
     name = DOCS.get(request.match_info['name'])
     if not name:
         raise web.HTTPNotFound()
-    return web.Response(text=open(f'/opt/wglab/docs/{name}', encoding='utf-8').read(), content_type='text/markdown')
+    text = open(f'/opt/wglab/docs/{name}', encoding='utf-8').read()
+    return web.Response(text=text.replace('{{INCIDENT_DATE}}', incident_date()), content_type='text/markdown')
+
+
+def incident_date():
+    """學校信上的事發日期：環境第一次建立時的兩天前，存起來避免跨過午夜就變。"""
+    try:
+        return open(INCIDENT).read().strip()
+    except OSError:
+        d = time.strftime('%Y/%m/%d', time.localtime(time.time() - 2 * 86400))
+        os.makedirs(os.path.dirname(INCIDENT), exist_ok=True)
+        open(INCIDENT, 'w').write(d)
+        return d
 
 
 async def school(request):
