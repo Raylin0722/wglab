@@ -91,8 +91,7 @@ def init_job(job):
     import machines
     import scenario
 
-    def say(*a):
-        INIT['detail'] = ' '.join(str(x) for x in a)
+    def say(*a):                 # 只寫進工作紀錄；初始化畫面不顯示細節，免得透露情境
         job.log(*a)
 
     INIT.update(step='ready', detail='')
@@ -113,12 +112,14 @@ def init_job(job):
 def loop():
     """等 wg-portal 起來；wg0 不存在就初始化（227 被重建時也會重來一次）。"""
     import jobs
+    import machines
     need_init = False
     while True:
         try:
             ids = [i['Identifier'] for i in api('GET', '/interface/all')]
             if 'wg0' not in ids:
                 INIT.update(active=True, step='seed', detail='')
+                machines.clear_records()     # 實驗室重新開始：上一輪的學校與列印紀錄不能留著
                 seed()
                 need_init = True
             if need_init and not jobs.busy():

@@ -110,7 +110,6 @@ async function poll() {
   if (init.active) {
     const order = $$('#initSteps li').map(li => li.dataset.step), at = order.indexOf(init.step);
     $$('#initSteps li').forEach((li, i) => { li.classList.toggle('done', i < at); li.classList.toggle('now', i === at); });
-    $('#initDetail').textContent = init.detail || '';
   }
   for (const [svc, up] of Object.entries(s.machines)) $(`.ttab[data-svc="${svc}"] .dot`).classList.toggle('up', up);
   const job = s.job, busy = job && job.state === 'running';

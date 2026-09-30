@@ -100,6 +100,19 @@ def wait_ready(log, since=0, timeout=150):
     return False
 
 
+def clear_records():
+    """清掉學校、列印回撥與驗收的紀錄（從頭來過，或 wg-portal 重新初始化時）。"""
+    # 學校的程式會一直讀寫這兩個檔，清空內容而不刪檔
+    open(f'{SCHOOL}/raw.jsonl', 'w').close()
+    with open(f'{SCHOOL}/alerts.json', 'w') as f:
+        f.write('[]')
+    for f in glob.glob(f'{CALLBACKS}/*') + glob.glob(f'{STATE}/check-history.jsonl'):
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+
+
 def reset(job):
     """從頭來過：重建 227、router、routerlog，清掉學校與列印的紀錄，wg-portal 會重新初始化。"""
     job.log('重建 227、router、routerlog（所有設定都會清掉）…')
@@ -108,11 +121,8 @@ def reset(job):
     if r.returncode:
         job.log('重建失敗：' + (r.stderr.strip().splitlines() or ['?'])[-1])
         return {'ok': False}
-    # 學校的程式會一直讀寫這兩個檔，清空內容而不刪檔
-    open(f'{SCHOOL}/raw.jsonl', 'w').close()
-    with open(f'{SCHOOL}/alerts.json', 'w') as f:
-        f.write('[]')
-    for f in glob.glob(f'{CALLBACKS}/*') + glob.glob(f'{CLIENT_CONF}/*') + glob.glob(f'{STATE}/check-history.jsonl'):
+    clear_records()
+    for f in glob.glob(f'{CLIENT_CONF}/*'):
         try:
             os.remove(f)
         except OSError:

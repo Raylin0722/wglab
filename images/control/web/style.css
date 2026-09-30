@@ -82,4 +82,3 @@ aside { display: flex; flex-direction: column; min-height: 0; background: var(--
 .initbox li.now { color: var(--accent); font-weight: 600; }
 .initbox li.now::before { content: '●'; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .2; } }
-.initdetail { min-height: 1.6em; font-size: 13px; color: var(--muted); font-family: var(--mono, monospace); }

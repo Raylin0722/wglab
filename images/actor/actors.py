@@ -86,10 +86,13 @@ def run_school():
                 f.write(json.dumps(rec) + '\n')
             if proto == 17 and dport == 137:
                 window = [(wt, wd) for wt, wd in window if t - wt < 300] + [(t, dst)]
-                if len({d for _, d in window}) >= 50 and t - last_alert > 600:
-                    last_alert = t
+                if len({d for _, d in window}) >= 50:
                     with lock:
                         a = json.load(open(alerts))
+                        # 同一波掃描 10 分鐘內只通報一次；紀錄被清空（從頭來過、重新初始化）就重新計算
+                        if a and t - last_alert <= 600:
+                            continue
+                        last_alert = t
                         a.append({'time': now(), 'ip': src, 'type': 'Virus', 'reason': 'U137:flow', 'note': '疑似中毒'})
                         json.dump(a, open(alerts, 'w'), ensure_ascii=False)
 
