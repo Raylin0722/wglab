@@ -6,7 +6,7 @@
 import os
 import time
 
-from common import CLIENT_CONF, containers, log, ns, run
+from common import CLIENT_CONF, CLIENT_LOCK, containers, log, ns, run, wg_stale
 
 # （機器, 網卡名稱）⇄（機器, 網卡名稱）
 LINKS = [
@@ -66,6 +66,15 @@ def plug(i, side, svc, ifname, p):
 
 def wg_up(p, who):
     """在家的 WireGuard 使用者：依 control 產生的設定建立 wg0。"""
+    if not CLIENT_LOCK.acquire(blocking=False):     # 初始化正在改設定，下一輪再建
+        return
+    try:
+        _wg_up(p, who)
+    finally:
+        CLIENT_LOCK.release()
+
+
+def _wg_up(p, who):
     conf, addr = f'{CLIENT_CONF}/{who}.conf', f'{CLIENT_CONF}/{who}.addr'
     if not (os.path.exists(conf) and os.path.exists(addr)):
         return
@@ -100,7 +109,7 @@ def configure(svc, p):
         ns(p, 'ip', 'link', 'set', dev, 'up')
     if gw:
         ns(p, 'ip', 'route', 'replace', 'default', 'via', gw)
-    if svc.startswith('home-') and not has_if(p, 'wg0'):
+    if svc.startswith('home-') and wg_stale(p, svc[5:]):
         wg_up(p, svc[5:])
 
 
@@ -115,10 +124,10 @@ def reconcile(force=False):
                 other = link[1] if side == 'a' else link[0]
                 log(f'接線 {svc}:{ifname}（⇄ {other[0]}:{other[1]}）')
                 dirty.add(svc)
-    # client 設定剛產生（或重新產生）時，WireGuard 也要重建
+    # client 設定剛產生（或重新產生）時，WireGuard 也要重建；wg0 還在但用舊金鑰的也一樣
     for x in 'abc':
         svc = f'home-{x}'
-        if svc in cs and os.path.exists(f'{CLIENT_CONF}/{x}.conf') and not has_if(cs[svc][1], 'wg0'):
+        if svc in cs and wg_stale(cs[svc][1], x):
             dirty.add(svc)
     for svc in dirty & set(ACTORS):
         if svc in cs:

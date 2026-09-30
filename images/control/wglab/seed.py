@@ -3,7 +3,7 @@ import os
 import subprocess
 import time
 
-from common import CLIENT_CONF, api, containers, dx, log, ns
+from common import CLIENT_CONF, CLIENT_LOCK, api, containers, dx, log, ns
 
 # 照 227 當時的寫法：放行轉送、MASQUERADE，以及 6/24 加上的那條 /24
 POSTUP = ('iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; '
@@ -44,6 +44,13 @@ def fake_apt_history():
 
 
 def seed():
+    with CLIENT_LOCK:            # 期間接線程式不會建 client 的 wg0
+        _seed()
+    fake_apt_history()
+    log('wg-portal：已建立 wg0 與 8 個 peer')
+
+
+def _seed():
     # 先拆掉 client 舊的 wg0，寫好新設定後再由接線程式重建
     for svc, (_, p, _) in containers().items():
         if svc.startswith('home-'):
@@ -64,8 +71,6 @@ def seed():
         api('POST', '/peer/new', p)
         if role:
             write_client(role, addr, priv, psk, server_pub)
-    fake_apt_history()
-    log('wg-portal：已建立 wg0 與 8 個 peer')
 
 
 def day_job(job):

@@ -6,7 +6,7 @@ import subprocess
 import threading
 import time
 
-from common import CALLBACKS, CLIENT_CONF, SCHOOL, STATE, api, containers, dx, ns, project, run
+from common import CALLBACKS, CLIENT_CONF, SCHOOL, STATE, api, containers, dx, ns, project, run, wg_stale
 
 PLAYER = ('wg227', 'router', 'routerlog')
 NAMES = {'wg227': '227', 'router': 'router', 'routerlog': 'routerlog'}
@@ -38,7 +38,7 @@ def _handshake(p):
 
 
 def wait_ready(log, since=0, timeout=150):
-    """等到三台玩家機器開機完成、wg-portal 回應，且兩台會連線的 client 都在 since 之後重新握手。"""
+    """等到三台玩家機器開機完成、wg-portal 回應，且三台 WireGuard client 都用目前的伺服器金鑰、在 since 之後重新握手。"""
     import plumber
     deadline, last, stale_since = time.time() + timeout, '', None
     while time.time() < deadline:
@@ -61,15 +61,20 @@ def wait_ready(log, since=0, timeout=150):
                 if not ok:
                     why = '等待 wg-portal 啟動'
                 else:
-                    stale = []
-                    for h in ('home-a', 'home-c'):
+                    stale, oldkey = [], []
+                    for h in ('home-a', 'home-b', 'home-c'):
                         if h not in cs:
                             stale.append(h)
                             continue
-                        if _handshake(cs[h][1]) < since_boot:
+                        if wg_stale(cs[h][1], h[-1]):
+                            oldkey.append(h)            # 接線程式會在 2 秒內用新設定重建
+                            stale.append(h)
+                        elif _handshake(cs[h][1]) < since_boot:
                             ns(cs[h][1], 'ping', '-c1', '-W1', '10.31.22.1')   # 送點流量，讓 client 重新握手
                             stale.append(h)
-                    if stale:
+                    if oldkey:
+                        why = '、'.join(h.replace('home-', 'client-') for h in oldkey) + ' 的 WireGuard 用的是舊的伺服器金鑰，重建中'
+                    elif stale:
                         why = '等待 WireGuard client 重新連線'
                         # 227 重開後 client 要等十幾秒到一分鐘才會自己重新握手；
                         # 超過 10 秒就讓 client 重建連線（像筆電重新連 VPN），加快驗收
